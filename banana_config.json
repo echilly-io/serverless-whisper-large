@@ -1,0 +1,21 @@
+{
+    "name": "Whisper LargeV2++",
+    "category": "Audio",
+    "example_input": {
+        "base64String":"<BASE64BYTESTRING>"
+    },
+    "example_output": {
+        "text": "This is the transcribed text.",
+        "segments": [
+            {
+                "id": 0,
+                "seek": 0,
+                "start": 0.0,
+                "end": 1.0,
+                "text": "This is the transcribed text."
+            }
+        ],
+        "language": "en"
+    },
+    "version": "1"
+  }
