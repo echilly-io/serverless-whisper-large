@@ -1,4 +1,6 @@
 sanic==22.6.2
+torch
 transformers
 accelerate
-openai-whisper @ git+https://github.com/Joemgu7/whisper-light.git
+faster-whisper @ git+https://github.com/guillaumekln/faster-whisper
+ctranslate2>=3.9,<4

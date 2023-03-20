@@ -1,14 +1,18 @@
-import whisper
 import os
 import base64
 from io import BytesIO
+from faster_whisper import WhisperModel
 
 # Init is ran on server startup
 # Load your model to GPU as a global variable here using the variable name "model"
 def init():
     global model
-    model_name = os.getenv("MODEL_NAME")
-    model = whisper.load_model(model_name, device="cuda", in_memory=True, fp16=True)
+    model_path = "whisper-large-v2-ct2"
+    compute_type = "int8_float16"
+    model = WhisperModel(
+        model_path=model_path,
+        compute_type=compute_type,
+    )
 
 def _parse_arg(args : str, data : dict, default = None, required = False):
     arg = data.get(args, None)
@@ -41,14 +45,30 @@ def inference(model_inputs:dict) -> dict:
         file.write(bytes.getbuffer())
     
     # Run the model
-    result = model.transcribe(tmp_file, fp16=True, **kwargs)
-    result['segments'] = [{
-        "id":x['id'],
-        "seek":x['seek'],
-        "start":x['start'],
-        "end":x['end'],
-        "text":x['text']
-        } for x in result['segments']]
+    segments, info = model.transcribe(tmp_file, **kwargs)
+    text = ""
+    real_segments = []
+    for segment in segments:
+        text += segment.text + " "
+        current_segment = {
+            "text": segment.text,
+            "start": segment.start,
+            "end": segment.end,
+        }
+        if kwargs.get("word_timestamps", False) and segment.words:
+            current_segment["word_timestamps"] = segment.words
+
+        real_segments.append(current_segment)
+
+    # Format the results
+    result = {
+        "text": text,
+        "segments": segments,
+        "language": info.language,
+        "language_probability": info.language_probability,
+        "duration": info.duration,
+    }
+
     os.remove(tmp_file)
     # Return the results as a dictionary
     return result
