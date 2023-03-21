@@ -13,6 +13,7 @@ def init():
         model_path=model_path,
         compute_type=compute_type,
     )
+    print("Successfully loaded model")
 
 def _parse_arg(args : str, data : dict, default = None, required = False):
     arg = data.get(args, None)
@@ -28,7 +29,7 @@ def _parse_arg(args : str, data : dict, default = None, required = False):
 # Reference your preloaded global model variable here.
 def inference(model_inputs:dict) -> dict:
     global model
-
+    print("Running inference")
     # Parse out your arguments
     try:
         BytesString = _parse_arg("base64String", model_inputs, required=True)
@@ -36,6 +37,7 @@ def inference(model_inputs:dict) -> dict:
         kwargs = _parse_arg("kwargs", model_inputs, {})
 
     except Exception as e:
+        print("Error parsing arguments")
         return {"error":str(e)}
     
     bytes = BytesIO(base64.b64decode(BytesString.encode("ISO-8859-1")))
@@ -44,8 +46,10 @@ def inference(model_inputs:dict) -> dict:
     with open(tmp_file,'wb') as file:
         file.write(bytes.getbuffer())
     
+    print("Finished writing file")
     # Run the model
     segments, info = model.transcribe(tmp_file, **kwargs)
+    print("Finished running model")
     text = ""
     real_segments = []
     for segment in segments:
