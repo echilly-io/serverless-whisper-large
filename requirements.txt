@@ -4,3 +4,4 @@ transformers
 accelerate
 faster-whisper @ git+https://github.com/guillaumekln/faster-whisper
 ctranslate2
+potassium
