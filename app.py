@@ -8,6 +8,8 @@ from transformers import pipeline
 import torch
 import time
 
+app = Potassium("echilly-io_serverless-whisper-large")
+
 # @app.init runs at startup, and initializes the app's context
 @app.init
 def init():
