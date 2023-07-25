@@ -3,16 +3,26 @@ import base64
 from io import BytesIO
 from faster_whisper import WhisperModel
 
-# Init is ran on server startup
-# Load your model to GPU as a global variable here using the variable name "model"
+from potassium import Potassium, Request, Response
+from transformers import pipeline
+import torch
+import time
+
+# @app.init runs at startup, and initializes the app's context
+@app.init
 def init():
-    global model
+    device = 0 if torch.cuda.is_available() else -1
     model_path = "whisper-large-v2-ct2"
     compute_type = "int8_float16"
     model = WhisperModel(
         model_path=model_path,
         compute_type=compute_type,
     )
+    context = {
+        "model": model,
+    }
+
+    return context
     print("Successfully loaded model")
 
 def _parse_arg(args : str, data : dict, default = None, required = False):
@@ -25,11 +35,12 @@ def _parse_arg(args : str, data : dict, default = None, required = False):
 
     return arg
 
-# Inference is ran for every server call
-# Reference your preloaded global model variable here.
-def inference(model_inputs:dict) -> dict:
-    global model
-    print("Running inference")
+# @app.handler is an http post handler running for every call
+@app.handler()
+def handler(context: dict, request: Request) -> Response:
+    
+    print("Running app handler")
+
     # Parse out your arguments
     try:
         BytesString = _parse_arg("base64String", model_inputs, required=True)
@@ -47,6 +58,11 @@ def inference(model_inputs:dict) -> dict:
         file.write(bytes.getbuffer())
     
     print("Finished writing file")
+
+    prompt = request.json.get("prompt")
+    model = context.get("model")
+    #outputs = model(prompt)
+
     # Run the model
     segments, info = model.transcribe(tmp_file, **kwargs)
     print("Finished running model")
@@ -74,5 +90,11 @@ def inference(model_inputs:dict) -> dict:
     }
 
     os.remove(tmp_file)
-    # Return the results as a dictionary
-    return result
+
+    return Response(
+        json = {"outputs": result}, 
+        status=200
+    )
+
+if __name__ == "__main__":
+    app.serve()
