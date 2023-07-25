@@ -3,4 +3,4 @@ torch==1.13.1
 transformers
 accelerate
 faster-whisper @ git+https://github.com/guillaumekln/faster-whisper
-ctranslate2==3.9
+ctranslate2
